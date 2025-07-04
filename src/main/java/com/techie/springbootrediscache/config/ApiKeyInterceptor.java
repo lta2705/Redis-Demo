@@ -11,11 +11,16 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import java.util.concurrent.TimeUnit;
 
 @Component
-@RequiredArgsConstructor
+
 public class ApiKeyInterceptor implements HandlerInterceptor {
 
     private final StringRedisTemplate redisTemplate;
     private final ApiKeyRepository apiKeyRepository;
+
+    public ApiKeyInterceptor(StringRedisTemplate redisTemplate, ApiKeyRepository apiKeyRepository) {
+        this.redisTemplate = redisTemplate;
+        this.apiKeyRepository = apiKeyRepository;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)

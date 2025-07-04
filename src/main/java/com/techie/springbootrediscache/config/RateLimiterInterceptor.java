@@ -24,7 +24,7 @@ public class RateLimiterInterceptor implements HandlerInterceptor {
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
             throws IOException {
-        String ip = request.getRemoteAddr();
+//        String ip = request.getRemoteAddr();
         String apiKey = request.getHeader("x-api-key");
         String key = "rate:" + apiKey;
 
