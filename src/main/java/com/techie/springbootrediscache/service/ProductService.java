@@ -3,6 +3,9 @@ package com.techie.springbootrediscache.service;
 import com.techie.springbootrediscache.dto.ProductDto;
 import com.techie.springbootrediscache.entity.Product;
 import com.techie.springbootrediscache.repository.ProductRepository;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
@@ -13,42 +16,42 @@ public class ProductService {
 
     public static final String PRODUCT_CACHE = "products";
     private final ProductRepository productRepository;
+    private final ModelMapper modelMapper;
 
-    public ProductService(ProductRepository productRepository) {
+    @Autowired
+    public ProductService(ProductRepository productRepository, ModelMapper modelMapper) {
         this.productRepository = productRepository;
+        this.modelMapper = modelMapper;
     }
 
     @CachePut(value = PRODUCT_CACHE, key = "#result.id()")
     public ProductDto createProduct(ProductDto productDto) {
-        var product = new Product();
-        product.setName(productDto.name());
-        product.setPrice(productDto.price());
+        Product product = new Product();
+        product = modelMapper.map(productDto, product.getClass());
+        productRepository.save(product);
 
-        Product savedProduct = productRepository.save(product);
-        return new ProductDto(savedProduct.getId(), savedProduct.getName(),
-                savedProduct.getPrice());
+        return modelMapper.map(product, ProductDto.class);
     }
 
     @Cacheable(value = PRODUCT_CACHE, key = "#productId")
     public ProductDto getProduct(Long productId) {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Cannot find product with id " + productId));
-        return new ProductDto(product.getId(), product.getName(),
-                product.getPrice());
+
+        return modelMapper.map(product, ProductDto.class);
     }
 
     @CachePut(value = PRODUCT_CACHE, key = "#result.id()")
     public ProductDto updateProduct(ProductDto productDto) {
-        Long productId = productDto.id();
+        Long productId = productDto.getId();
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Cannot find product with id " + productId));
 
-        product.setName(productDto.name());
-        product.setPrice(productDto.price());
-
+        modelMapper.map(productDto, product);
         Product updatedProduct = productRepository.save(product);
-        return new ProductDto(updatedProduct.getId(), updatedProduct.getName(),
-                updatedProduct.getPrice());
+
+        return modelMapper.map(updatedProduct, ProductDto.class);
+
     }
 
     @CacheEvict(value = PRODUCT_CACHE, key = "#productId")
